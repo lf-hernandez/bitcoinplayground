@@ -15,8 +15,8 @@ func (p Person) String() string {
 }
 
 type Transaction struct {
-	Sender   Person
-	Receiver Person
+	Sender   *Person
+	Receiver *Person
 	Amount   int
 }
 
@@ -60,7 +60,7 @@ func (l *Ledger) RunInitialDistribution() {
 }
 
 func (l *Ledger) addTransaction(sender *Person, receiver *Person, amount int) {
-	newTransaction := Transaction{Sender: *sender, Receiver: *receiver, Amount: amount}
+	newTransaction := Transaction{Sender: sender, Receiver: receiver, Amount: amount}
 	l.Transactions = append(l.Transactions, newTransaction)
 }
 
@@ -122,4 +122,52 @@ func (l *Ledger) Print() {
 		}
 		fmt.Println("\n\t\t]")
 	}
+}
+
+func RunSimulation() {
+	fmt.Println("Initializing new communal ledger")
+	communalLedger := NewLedger()
+	communalLedger.Print()
+
+	fmt.Println("Distributing 20 coins to each participant")
+	communalLedger.RunInitialDistribution()
+	communalLedger.Print()
+
+	var err error
+
+	felipe, err := communalLedger.GetParticipantByName("Felipe")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	satoshi, err := communalLedger.GetParticipantByName("Satoshi")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if felipe != nil && satoshi != nil {
+		fmt.Println("Felipe sent Satoshi 5 coin")
+		err = communalLedger.SimulateTransaction(felipe, satoshi, 5)
+		if err != nil {
+			fmt.Println("Transaction error:  ", err)
+		} else {
+			communalLedger.Print()
+		}
+	}
+
+	jane, err := communalLedger.GetParticipantByName("Jane")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if jane != nil && satoshi != nil {
+		fmt.Println("Satoshi sent Jane 15 coin")
+		err = communalLedger.SimulateTransaction(satoshi, jane, 15)
+		if err != nil {
+			fmt.Println("Transaction error:  ", err)
+		} else {
+			communalLedger.Print()
+		}
+	}
+
 }
