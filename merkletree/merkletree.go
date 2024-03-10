@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-func BuildTree(txs []string) *MerkleNode {
+func BuildTree(txs []string, isUnbalanced bool) *MerkleNode {
 	var leaves []*MerkleNode
 
 	for _, tx := range txs {
@@ -16,10 +16,14 @@ func BuildTree(txs []string) *MerkleNode {
 		leaves = append(leaves, &MerkleNode{hash: hashedContent})
 	}
 
+	if isUnbalanced {
+		return buildUnbalancedTree(leaves)
+	}
+
 	return buildTree(leaves)
 }
 
-func buildTree(nodes []*MerkleNode) *MerkleNode {
+func buildUnbalancedTree(nodes []*MerkleNode) *MerkleNode {
 	if len(nodes) == 1 {
 		return nodes[0]
 	}
@@ -35,7 +39,28 @@ func buildTree(nodes []*MerkleNode) *MerkleNode {
 		}
 	}
 
-	return buildTree(higherLevelNodes)
+	return buildUnbalancedTree(higherLevelNodes)
+}
+
+func buildTree(ns []*MerkleNode) *MerkleNode {
+	if len(ns) == 1 {
+		return ns[0]
+	}
+
+	var hlns []*MerkleNode
+
+	if len(ns)%2 != 0 {
+		ln := ns[len(ns)-1]
+		ns = append(ns, ln)
+	}
+
+	for i := 0; i < len(ns); i += 2 {
+		cn := composeNodes(ns[i], ns[i+1])
+		hlns = append(hlns, cn)
+	}
+
+	return buildTree(hlns)
+
 }
 
 func composeNodes(l, r *MerkleNode) *MerkleNode {

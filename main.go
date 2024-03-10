@@ -11,7 +11,7 @@ import (
 func main() {
 	// ledger.RunSimulation()
 	fmt.Print("Merkle Tree simulation\n\n")
-	txs := []string{"Felipe sent Satoshi 1 coin", "Jane sent John 5 coins", "Satoshi sent Jane 3 coins", "John sent Felipe 7 coins"}
+	txs := []string{"Felipe sent Satoshi 1 coin", "Jane sent John 5 coins", "Satoshi sent Jane 3 coins", "John sent Felipe 7 coins", "Unbalanced*"}
 	for _, tx := range txs {
 		h := sha256.New()
 		h.Write([]byte(tx))
@@ -19,7 +19,12 @@ func main() {
 	}
 	fmt.Println("")
 	fmt.Println("Building Merkle Tree...")
-	root := merkletree.BuildTree(txs)
+	fmt.Println("Unbalanced*")
+	ubroot := merkletree.BuildTree(txs, true)
+	ubtree := &merkletree.MerkleTree{Root: ubroot}
+	ubtree.PrintTree()
+	fmt.Println("Balanced")
+	root := merkletree.BuildTree(txs, false)
 	tree := &merkletree.MerkleTree{Root: root}
 	tree.PrintTree()
 }
