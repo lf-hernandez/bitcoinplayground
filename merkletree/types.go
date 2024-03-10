@@ -1,12 +1,11 @@
 package merkletree
 
-type Node struct {
-	k string
-	v string
-	l *Node
-	r *Node
+type MerkleNode struct {
+	hash []byte
+	l    *MerkleNode
+	r    *MerkleNode
 }
 
-type Tree struct {
-	r *Node
+type MerkleTree struct {
+	Root *MerkleNode
 }
