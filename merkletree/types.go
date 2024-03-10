@@ -1,9 +1,9 @@
 package merkletree
 
 type MerkleNode struct {
-	hash []byte
-	l    *MerkleNode
-	r    *MerkleNode
+	Hash []byte
+	L    *MerkleNode
+	R    *MerkleNode
 }
 
 type MerkleTree struct {

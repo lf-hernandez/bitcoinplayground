@@ -13,7 +13,7 @@ func BuildTree(txs []string, isUnbalanced bool) *MerkleNode {
 		h := sha256.New()
 		h.Write([]byte(tx))
 		hashedContent := h.Sum(nil)
-		leaves = append(leaves, &MerkleNode{hash: hashedContent})
+		leaves = append(leaves, &MerkleNode{Hash: hashedContent})
 	}
 
 	if isUnbalanced {
@@ -65,10 +65,10 @@ func buildTree(ns []*MerkleNode) *MerkleNode {
 
 func composeNodes(l, r *MerkleNode) *MerkleNode {
 	h := sha256.New()
-	h.Write(l.hash)
-	h.Write(r.hash)
+	h.Write(l.Hash)
+	h.Write(r.Hash)
 	compositeHash := h.Sum(nil)
-	return &MerkleNode{hash: compositeHash, l: l, r: r}
+	return &MerkleNode{Hash: compositeHash, L: l, R: r}
 }
 
 func (m *MerkleTree) PrintTree() {
@@ -86,12 +86,12 @@ func printNode(n *MerkleNode, level int) {
 		indent += "\t"
 	}
 
-	fmt.Printf("%s\n", hex.EncodeToString(n.hash))
+	fmt.Printf("%s\n", hex.EncodeToString(n.Hash))
 
-	if n.l != nil || n.r != nil {
+	if n.L != nil || n.R != nil {
 		fmt.Printf("%sLeft: ", indent)
-		printNode(n.l, level+1)
+		printNode(n.L, level+1)
 		fmt.Printf("%sRight: ", indent)
-		printNode(n.r, level+1)
+		printNode(n.R, level+1)
 	}
 }
