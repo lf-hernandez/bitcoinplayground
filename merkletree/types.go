@@ -10,3 +10,9 @@ type MerkleNode struct {
 type MerkleTree struct {
 	Root *MerkleNode
 }
+
+type MerkleProofElement struct {
+	Hash    []byte
+	isLeft  bool
+	isRight bool
+}

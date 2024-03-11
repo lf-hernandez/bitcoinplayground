@@ -7,16 +7,71 @@ import (
 	"fmt"
 )
 
-// TODO: Implement proof
-func GenerateMerkleProof(tx string) []byte {
+func VerifyMerkleProof(txHash []byte, proof []MerkleProofElement, rootHash []byte) bool {
+	currentHash := txHash
+
+	for _, e := range proof {
+		if e.isLeft {
+			currentHash = composeHash(e.Hash, currentHash)
+		} else {
+			currentHash = composeHash(currentHash, e.Hash)
+		}
+	}
+	return bytes.Equal(currentHash, rootHash)
+}
+
+func composeHash(leftHash, rootHash []byte) []byte {
+	h := sha256.New()
+	h.Write(leftHash)
+	h.Write(rootHash)
+	return h.Sum(nil)
+}
+
+func (mt *MerkleTree) GenerateMerkleProof(tx string) []MerkleProofElement {
 	h := sha256.New()
 	h.Write([]byte(tx))
 	txH := h.Sum(nil)
-	// leaf := findLeafByHash(txH, mt)
-	return txH
+	leaf := mt.FindLeafByHash(txH)
+
+	proof := mt.buildProof(leaf)
+	return proof
 }
 
-func FindLeafByHash(hash []byte, node *MerkleNode) *MerkleNode {
+func (mt *MerkleTree) buildProof(node *MerkleNode) []MerkleProofElement {
+	var proof []MerkleProofElement
+
+	for node != nil && node != mt.Root {
+		sibling := findSibling(node)
+		if sibling != nil {
+			e := MerkleProofElement{
+				Hash:    sibling.Hash,
+				isLeft:  sibling == node.Parent.L,
+				isRight: sibling == node.Parent.R,
+			}
+			proof = append(proof, e)
+		}
+		node = node.Parent
+	}
+	return proof
+}
+
+func findSibling(node *MerkleNode) *MerkleNode {
+	p := node.Parent
+	if p == nil {
+		return nil
+	}
+
+	if node == p.L {
+		return p.R
+	}
+	return p.L
+}
+
+func (mt *MerkleTree) FindLeafByHash(hash []byte) *MerkleNode {
+	return findLeafByHash(hash, mt.Root)
+}
+
+func findLeafByHash(hash []byte, node *MerkleNode) *MerkleNode {
 	if node == nil {
 		return nil
 	}
@@ -27,13 +82,13 @@ func FindLeafByHash(hash []byte, node *MerkleNode) *MerkleNode {
 		}
 	}
 
-	leftLeaf := FindLeafByHash(hash, node.L)
+	leftLeaf := findLeafByHash(hash, node.L)
 
 	if leftLeaf != nil {
 		return leftLeaf
 	}
 
-	rightLeaf := FindLeafByHash(hash, node.R)
+	rightLeaf := findLeafByHash(hash, node.R)
 	return rightLeaf
 }
 
@@ -73,20 +128,20 @@ func buildUnbalancedTree(nodes []*MerkleNode) *MerkleNode {
 	return buildUnbalancedTree(higherLevelNodes)
 }
 
-func buildBalancedTree(ns []*MerkleNode) *MerkleNode {
-	if len(ns) == 1 {
-		return ns[0]
+func buildBalancedTree(nodes []*MerkleNode) *MerkleNode {
+	if len(nodes) == 1 {
+		return nodes[0]
 	}
 
 	var hlns []*MerkleNode
 
-	if len(ns)%2 != 0 {
-		ln := ns[len(ns)-1]
-		ns = append(ns, ln)
+	if len(nodes)%2 != 0 {
+		ln := nodes[len(nodes)-1]
+		nodes = append(nodes, ln)
 	}
 
-	for i := 0; i < len(ns); i += 2 {
-		cn := composeNodes(ns[i], ns[i+1])
+	for i := 0; i < len(nodes); i += 2 {
+		cn := composeNodes(nodes[i], nodes[i+1])
 		hlns = append(hlns, cn)
 	}
 
@@ -94,23 +149,23 @@ func buildBalancedTree(ns []*MerkleNode) *MerkleNode {
 
 }
 
-func composeNodes(l, r *MerkleNode) *MerkleNode {
+func composeNodes(leftNode, rightNode *MerkleNode) *MerkleNode {
 	h := sha256.New()
-	h.Write(l.Hash)
-	h.Write(r.Hash)
+	h.Write(leftNode.Hash)
+	h.Write(rightNode.Hash)
 	compositeHash := h.Sum(nil)
-	compositeNode := &MerkleNode{Hash: compositeHash, L: l, R: r}
-	l.Parent, r.Parent = compositeNode, compositeNode
+	compositeNode := &MerkleNode{Hash: compositeHash, L: leftNode, R: rightNode}
+	leftNode.Parent, rightNode.Parent = compositeNode, compositeNode
 	return compositeNode
 }
 
-func (m *MerkleTree) PrintTree() {
-	fmt.Print("Merkle Root: ")
-	printNode(m.Root, 0)
+func (mt *MerkleTree) PrintTree() {
+	fmt.Print("Root: ")
+	printNode(mt.Root, 0)
 }
 
-func printNode(n *MerkleNode, level int) {
-	if n == nil {
+func printNode(node *MerkleNode, level int) {
+	if node == nil {
 		return
 	}
 
@@ -119,12 +174,12 @@ func printNode(n *MerkleNode, level int) {
 		indent += "\t"
 	}
 
-	fmt.Printf("%s\n", hex.EncodeToString(n.Hash))
+	fmt.Printf("%s\n", hex.EncodeToString(node.Hash))
 
-	if n.L != nil || n.R != nil {
+	if node.L != nil || node.R != nil {
 		fmt.Printf("%sLeft: ", indent)
-		printNode(n.L, level+1)
+		printNode(node.L, level+1)
 		fmt.Printf("%sRight: ", indent)
-		printNode(n.R, level+1)
+		printNode(node.R, level+1)
 	}
 }
