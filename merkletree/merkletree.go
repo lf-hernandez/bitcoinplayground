@@ -1,10 +1,41 @@
 package merkletree
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 )
+
+// TODO: Implement proof
+func GenerateMerkleProof(tx string) []byte {
+	h := sha256.New()
+	h.Write([]byte(tx))
+	txH := h.Sum(nil)
+	// leaf := findLeafByHash(txH, mt)
+	return txH
+}
+
+func FindLeafByHash(hash []byte, node *MerkleNode) *MerkleNode {
+	if node == nil {
+		return nil
+	}
+
+	if node.L == nil && node.R == nil {
+		if bytes.Equal(node.Hash, hash) {
+			return node
+		}
+	}
+
+	leftLeaf := FindLeafByHash(hash, node.L)
+
+	if leftLeaf != nil {
+		return leftLeaf
+	}
+
+	rightLeaf := FindLeafByHash(hash, node.R)
+	return rightLeaf
+}
 
 func BuildTree(txs []string, isUnbalanced bool) *MerkleNode {
 	var leaves []*MerkleNode
@@ -20,7 +51,7 @@ func BuildTree(txs []string, isUnbalanced bool) *MerkleNode {
 		return buildUnbalancedTree(leaves)
 	}
 
-	return buildTree(leaves)
+	return buildBalancedTree(leaves)
 }
 
 func buildUnbalancedTree(nodes []*MerkleNode) *MerkleNode {
@@ -32,8 +63,8 @@ func buildUnbalancedTree(nodes []*MerkleNode) *MerkleNode {
 
 	for i := 0; i < len(nodes); i += 2 {
 		if i+1 < len(nodes) {
-			compositeNodes := composeNodes(nodes[i], nodes[i+1])
-			higherLevelNodes = append(higherLevelNodes, compositeNodes)
+			compositeNode := composeNodes(nodes[i], nodes[i+1])
+			higherLevelNodes = append(higherLevelNodes, compositeNode)
 		} else {
 			higherLevelNodes = append(higherLevelNodes, nodes[i])
 		}
@@ -42,7 +73,7 @@ func buildUnbalancedTree(nodes []*MerkleNode) *MerkleNode {
 	return buildUnbalancedTree(higherLevelNodes)
 }
 
-func buildTree(ns []*MerkleNode) *MerkleNode {
+func buildBalancedTree(ns []*MerkleNode) *MerkleNode {
 	if len(ns) == 1 {
 		return ns[0]
 	}
@@ -59,7 +90,7 @@ func buildTree(ns []*MerkleNode) *MerkleNode {
 		hlns = append(hlns, cn)
 	}
 
-	return buildTree(hlns)
+	return buildBalancedTree(hlns)
 
 }
 
@@ -68,7 +99,9 @@ func composeNodes(l, r *MerkleNode) *MerkleNode {
 	h.Write(l.Hash)
 	h.Write(r.Hash)
 	compositeHash := h.Sum(nil)
-	return &MerkleNode{Hash: compositeHash, L: l, R: r}
+	compositeNode := &MerkleNode{Hash: compositeHash, L: l, R: r}
+	l.Parent, r.Parent = compositeNode, compositeNode
+	return compositeNode
 }
 
 func (m *MerkleTree) PrintTree() {

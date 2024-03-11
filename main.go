@@ -36,7 +36,11 @@ func main() {
 	fmt.Printf("Verifying tx3: %v\n", txs[2])
 	h := sha256.New()
 	h.Write([]byte(txs[2]))
-	merkleProof = append(merkleProof, &merkletree.MerkleNode{Hash: h.Sum(nil)})
+	hash := h.Sum(nil)
+
+	tx3Leaf := merkletree.FindLeafByHash(hash, tree.Root)
+	fmt.Printf("Found leaf: %x\n", tx3Leaf.Hash)
+	merkleProof = append(merkleProof, tx3Leaf)
 
 	h = sha256.New()
 	h.Write([]byte(txs[3]))
