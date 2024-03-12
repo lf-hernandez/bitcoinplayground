@@ -69,7 +69,12 @@ func NewLedger() *Ledger {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("Participant: %s\nPublic Key: X: %x Y: %x\n\n", participant.Name, participant.PublicKey.X.Bytes(), participant.PublicKey.Y.Bytes())
+		fmt.Printf("Participant: %s\nPublic Key:\n\tx: %x\n\ty: %x\nPrivate Key:\n\td: %x\n",
+			participant.Name,
+			participant.PublicKey.X.Bytes(),
+			participant.PublicKey.Y.Bytes(),
+			participant.PrivateKey.D.Bytes(),
+		)
 	}
 
 	return ledger
