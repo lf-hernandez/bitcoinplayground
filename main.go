@@ -1,16 +1,19 @@
 package main
 
 import (
-	// "github.com/lf-hernandez/bitcoinplayground/ledger"
 	"crypto/sha256"
 	"fmt"
+
+	"github.com/lf-hernandez/bitcoinplayground/ledger"
 
 	"github.com/lf-hernandez/bitcoinplayground/merkletree"
 )
 
 func main() {
-	// ledger.RunSimulation()
-	fmt.Print("Merkle Tree simulation\n\n")
+	fmt.Print("Communal ledger with DSA signing simulation\n\n")
+	ledger.RunSimulation()
+	fmt.Println("\n=========================================================")
+	fmt.Print("\nMerkle Tree simulation\n\n")
 
 	txs := []string{
 		"Felipe sent Satoshi 1 coin",
