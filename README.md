@@ -6,4 +6,12 @@ The purpose of this repo is to test assumptions and further understanding of Bit
 
 ## Installation
 
-Bitcoin Playground has no runtime dependencies. You can just download a binary and run it.
+Bitcoin Playground has no runtime dependencies. You can just [download](https://github.com/lf-hernandez/bitcoinplayground/releases/tag/0.1.0) the binary and run it.
+
+Alternatively, if you have a working Go environment: 
+
+```bash
+git clone https://github.com/lf-hernandez/bitcoinplayground
+cd bitcoinplayground
+make
+```
